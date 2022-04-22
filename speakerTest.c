@@ -1,22 +1,23 @@
-//#include <stdint.h>
-//#include <pigpio.h>
-#include <bcm2835.h>
+#include <wiringPi.h>
 
-#define SPEAKER_PIN 12
+#define PIN_LED 7
 
 int main() {
-
-    // RPi gpio init
-    if (gpioInitialise()<0) {
+    if(wiringPiSetup() == -1) {
         return 1;
     }
 
-    gpioSetMode(PIN_LED, PI_OUTPUT);
+    pinMode(PIN_LED, OUTPUT);
 
-    while (1) {
-        // Play click
-        gpioWrite(SPEAKER_PIN, 1);
-        sleep(1);
-        gpioWrite(SPEAKER_PIN, 0);
+    while(1) {
+	for(int i = 0; i < 5; i++)
+	{
+        digitalWrite(PIN_LED, 1);
+        delay(5);
+        digitalWrite(PIN_LED, 0);
+	delay(5);
+	}
+	delay(1000);
     }
+    return 0;
 }
