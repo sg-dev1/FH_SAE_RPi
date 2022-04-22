@@ -1,5 +1,6 @@
 //#include <stdint.h>
-#include <pigpio.h>
+//#include <pigpio.h>
+#include <bcm2835.h>
 
 #define SPEAKER_PIN 12
 
