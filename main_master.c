@@ -15,6 +15,7 @@ int main() {
     char buffer[BUFF_SIZE];
     char msg[BUFF_SIZE] = {'s'};
     struct sockaddr_in servaddr, cliaddr;
+    char client_list[3][2] = { {0x15, 0x00}, {0x25, 0x00}, {0x35, 0x00} };
     
     // Creating socket file descriptor
     if ( (sockfd = socket(AF_INET, SOCK_DGRAM, 0)) < 0 ) {
@@ -43,7 +44,7 @@ int main() {
 
     // Wait for all 3 clients to connect
     int client_cnt = 0;
-    while(client_cnt != 3)
+    while(client_list[1][1] == 0x00 && client_list[2][1] == 0x00 && client_list[3][1] == 0x00)
     {
         n = recvfrom(sockfd, (char *)buffer, BUFF_SIZE, MSG_WAITALL, ( struct sockaddr *) &cliaddr, &len);
 
@@ -53,12 +54,15 @@ int main() {
         }
         printf("\n");
 
-        if (buffer[0] == 0x15 || buffer[0] == 0x25 || buffer[0] == 0x35)
-        {
-            client_cnt ++;
+        for (int i = 0; i < 3; i++) {
+            if(buffer[0] == client_list[i][0]) {
+                client_list[i][1] = 0x01;
+                printf("Client %x connected\n", client_list[i][1]);
+            }
         }
-        printf("client count: %d\n", client_cnt);
     }
+
+    printf("All 3 clients are connected\n");
     
     // Broadcast timestamp
     // Wait X seconds
