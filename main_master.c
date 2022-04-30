@@ -44,7 +44,7 @@ int main() {
 
     // Wait for all 3 clients to connect
     int client_cnt = 0;
-    while(client_list[1][1] == 0x00 || client_list[2][1] == 0x00 || client_list[3][1] == 0x00)
+    while(client_list[0][1] == 0x00 || client_list[1][1] == 0x00 || client_list[2][1] == 0x00)
     {
         n = recvfrom(sockfd, (char *)buffer, BUFF_SIZE, MSG_WAITALL, ( struct sockaddr *) &cliaddr, &len);
 

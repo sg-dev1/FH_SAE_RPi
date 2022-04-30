@@ -17,7 +17,7 @@
 int main() {
 	int sockfd;
 	char buffer[BUFF_SIZE];
-    char msg[BUFF_SIZE] = {0x25, };
+    char msg[BUFF_SIZE] = {0x35, };
 	
 	struct sockaddr_in	 servaddr;
 
