@@ -6,6 +6,7 @@
 #include <sys/socket.h>
 #include <arpa/inet.h>
 #include <netinet/in.h>
+#include <sys/time.h>
 
 #include "settings.h"
 
@@ -42,28 +43,38 @@ int main() {
     socklen_t len = sizeof(cliaddr); //len is value/resuslt
     int n = 0;
 
-    // Wait for all 3 clients to connect
-    int client_cnt = 0;
-    while(client_list[0][1] == 0x00 || client_list[1][1] == 0x00 || client_list[2][1] == 0x00)
-    {
-        n = recvfrom(sockfd, (char *)buffer, BUFF_SIZE, MSG_WAITALL, ( struct sockaddr *) &cliaddr, &len);
+    #if !DEBUG
 
-        printf("Server received: ");
-        for (int i = 0; i < BUFF_SIZE; i++) {
-            printf("%x ", buffer[i]);
-        }
-        printf("\n");
+        // Wait for all 3 clients to connect & say hello
+        int client_cnt = 0;
+        while(client_list[0][1] == 0x00 || client_list[1][1] == 0x00 || client_list[2][1] == 0x00)
+        {
+            n = recvfrom(sockfd, (char *)buffer, BUFF_SIZE, MSG_WAITALL, ( struct sockaddr *) &cliaddr, &len);
 
-        for (int i = 0; i < 3; i++) {
-            if(buffer[0] == client_list[i][0]) {
-                client_list[i][1] = 0x01;
-                printf("Client %x connected\n", client_list[i][1]);
+            printf("Server received: ");
+            for (int i = 0; i < BUFF_SIZE; i++) {
+                printf("%x ", buffer[i]);
+            }
+            printf("\n");
+
+            for (int i = 0; i < 3; i++) {
+                if(buffer[0] == client_list[i][0]) {
+                    client_list[i][1] = 0x01;
+                    printf("Client %x connected\n", client_list[i][1]);
+                }
             }
         }
-    }
 
-    printf("All 3 clients are connected\n");
-    
+        printf("All 3 clients are connected\n");
+
+    #endif
+
+    // Generate timestamp
+    struct timeval ts;
+    gettimeofday(&ts, NULL);
+    long unsigned int timestamp = ts.tv_sec * 1000000 + ts.tv_usec;
+    printf("took %lu us\n", timestamp); 
+
     // Broadcast timestamp
     // Wait X seconds
     // Broadcast "start measurement"
