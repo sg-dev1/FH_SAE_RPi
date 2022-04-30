@@ -9,14 +9,15 @@
 #include <netinet/in.h>
 
 #include <sys/time.h>
-#include "common.h"
+
+#include "settings.h"
 
 
 // Driver code
 int main() {
 	int sockfd;
 	char buffer[BUFF_SIZE];
-    char msg[BUFF_SIZE] = {0x15, };
+    char msg[BUFF_SIZE] = {0x25, };
 	
 	struct sockaddr_in	 servaddr;
 
