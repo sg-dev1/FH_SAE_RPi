@@ -16,7 +16,8 @@
 // Driver code
 int main() {
 	int sockfd;
-	unsigned long int buffer;
+	//unsigned long int buffer;
+	char buffer[BUFF_SIZE];
     char msg[BUFF_SIZE] = {0x15, };
 	
 	struct sockaddr_in	 servaddr;
@@ -44,8 +45,8 @@ int main() {
 	int n = 0;
 	while(1) {
 		printf("receiving\n");
-		n = recvfrom(sockfd, (unsigned long int *)buffer, sizeof(unsigned long int), MSG_WAITALL, (struct sockaddr *) &servaddr, &len);
-        printf("Client received: %lu\n", buffer);
+		n = recvfrom(sockfd, (char *)buffer, BUFF_SIZE, MSG_WAITALL, (struct sockaddr *) &servaddr, &len);
+        printf("Client received: %s\n", buffer);
 	}
 
 	return 0;
