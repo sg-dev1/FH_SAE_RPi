@@ -16,7 +16,7 @@
 // Driver code
 int main() {
 	int sockfd;
-	char buffer[BUFF_SIZE];
+	unsigned long int buffer;
     char msg[BUFF_SIZE] = {0x15, };
 	
 	struct sockaddr_in	 servaddr;
@@ -38,6 +38,14 @@ int main() {
     for (size_t i = 0; i < sizeof(msg); ++i) printf("%02x", msg[i]);
 
     sendto(sockfd, (const char *)msg, BUFF_SIZE, MSG_CONFIRM, (const struct sockaddr *) &servaddr, sizeof(servaddr));
+
+
+	socklen_t len = 0;
+	int n = 0;
+	while(1) {
+		n = recvfrom(sockfd, (unsigned long int *)buffer, BUFF_SIZE, MSG_WAITALL, (struct sockaddr *) &servaddr, &len);
+        printf("Client received: %lu\n", buffer);
+	}
 
 	return 0;
 }
