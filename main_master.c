@@ -76,10 +76,8 @@ int main() {
     printf("took %lu us\n", timestamp); 
 
     // Broadcast timestamp
-    while(1) {
-        sendto(sockfd, &timestamp, sizeof(timestamp), MSG_CONFIRM, (const struct sockaddr *) &cliaddr, len);
-        //sendto(sockfd, (const char *)msg, strlen(msg), MSG_CONFIRM, (const struct sockaddr *) &cliaddr, len);
-    }
+    sendto(sockfd, &timestamp, sizeof(timestamp), MSG_CONFIRM, (const struct sockaddr *) &cliaddr, len);
+    
     // Wait X seconds
     // Broadcast "start measurement"
     // Play audio
