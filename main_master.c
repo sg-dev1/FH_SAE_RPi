@@ -77,7 +77,7 @@ int main() {
 
     // Broadcast timestamp
     while(1) {
-        sendto(sockfd, (long unsigned int *)timestamp, sizeof(timestamp), MSG_CONFIRM, (const struct sockaddr *) &cliaddr, len);
+        sendto(sockfd, &timestamp, sizeof(timestamp), MSG_CONFIRM, (const struct sockaddr *) &cliaddr, len);
         //sendto(sockfd, (const char *)msg, strlen(msg), MSG_CONFIRM, (const struct sockaddr *) &cliaddr, len);
     }
     // Wait X seconds

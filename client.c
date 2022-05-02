@@ -47,7 +47,7 @@ int main() {
 		printf("receiving\n");
 		//n = recvfrom(sockfd, (char *)buffer, BUFF_SIZE, MSG_WAITALL, (struct sockaddr *) &servaddr, &len);
         //printf("Client received: %s\n", buffer);
-		n = recvfrom(sockfd, (unsigned long int *)buffer, sizeof(long unsigned int), MSG_WAITALL, (struct sockaddr *) &servaddr, &len);
+		n = recvfrom(sockfd, &buffer, sizeof(buffer), MSG_WAITALL, (struct sockaddr *) &servaddr, &len);
 		printf("Client received: %lu\n", buffer);
 	}
 
