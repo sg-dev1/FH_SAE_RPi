@@ -16,8 +16,9 @@
 // Driver code
 int main() {
 	int sockfd;
-	unsigned long int buffer;
+	unsigned long int timestampBuffer;
 	//char buffer[BUFF_SIZE];
+	char buffer[BUFF_SIZE];
     char msg[BUFF_SIZE] = {0x15, };
 	
 	struct sockaddr_in	 servaddr;
@@ -33,7 +34,7 @@ int main() {
 	// Filling server information
 	servaddr.sin_family = AF_INET;
 	servaddr.sin_port = htons(PORT);
-	servaddr.sin_addr.s_addr = inet_addr("192.168.0.122");
+	servaddr.sin_addr.s_addr = inet_addr("10.0.0.2");
 
     // Say hello to the server
     for (size_t i = 0; i < sizeof(msg); ++i) printf("%02x", msg[i]);
@@ -47,8 +48,16 @@ int main() {
 		printf("receiving\n");
 		//n = recvfrom(sockfd, (char *)buffer, BUFF_SIZE, MSG_WAITALL, (struct sockaddr *) &servaddr, &len);
         //printf("Client received: %s\n", buffer);
+		n = recvfrom(sockfd, &timestampBuffer, sizeof(timestampBuffer), MSG_WAITALL, (struct sockaddr *) &servaddr, &len);
+		printf("[Client]Timestamp received: %lu\n", timestampBuffer);
+
+		sleep(1);
+		//Send ACK KEINE MESSAGE DAFÜR GEFUNDEN
+		sendto(sockfd, (const char *)msg, BUFF_SIZE, MSG_CONFIRM, (const struct sockaddr *) &servaddr, sizeof(servaddr));
+
+		//Receive "Start Measurement"
 		n = recvfrom(sockfd, &buffer, sizeof(buffer), MSG_WAITALL, (struct sockaddr *) &servaddr, &len);
-		printf("Client received: %lu\n", buffer);
+		printf("[Client]Message received: %x\n", buffer);
 	}
 
 	return 0;

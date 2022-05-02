@@ -72,16 +72,33 @@ int main() {
     // Generate timestamp
     struct timeval ts;
     gettimeofday(&ts, NULL);
-    long unsigned int timestamp = ts.tv_sec * 1000000 + ts.tv_usec;
+    long unsigned int timestamp = ts.tv_sec * 1E6 + ts.tv_usec; //Sicher das es nicht /1E6 sein sollte?
     printf("took %lu us\n", timestamp); 
 
     // Broadcast timestamp
     sendto(sockfd, &timestamp, sizeof(timestamp), MSG_CONFIRM, (const struct sockaddr *) &cliaddr, len);
-    
-    // Wait X seconds
-    // Broadcast "start measurement"
+    printf("Timestamp sent...");
+
+    // Wait X seconds (Wait time to receive ack)
+    int acksReceived = 0;
+    while (acksReceived<1){ //change to 3!!!!!!
+        printf("Wait for ACKs\n");
+        n = recvfrom(sockfd, (char *)buffer, BUFF_SIZE, MSG_WAITALL, ( struct sockaddr *) &cliaddr, &len);
+        //ToDo: Check ACK Message, check Client ID
+        acksReceived++;
+        printf("ACK's received %d\n", acksReceived);
+    }
+
+    // Broadcast "start measurement" to all online clients [Ich check 0h002 0h00 nicht...]
+    sendto(sockfd, (const char *)msg, sizeof(timestamp), MSG_CONFIRM, (const struct sockaddr *) &cliaddr, len);
+    printf("StartMeasurement sent...");
+
     // Play audio
+
     // Wait X seconds
+    //spleep??
+
+
     // If received -> Calc results; if not -> Display error
     
     return 0;
