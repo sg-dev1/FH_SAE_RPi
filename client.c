@@ -43,7 +43,8 @@ int main() {
 	socklen_t len = 0;
 	int n = 0;
 	while(1) {
-		n = recvfrom(sockfd, (unsigned long int *)buffer, BUFF_SIZE, MSG_WAITALL, (struct sockaddr *) &servaddr, &len);
+		printf("receiving\n");
+		n = recvfrom(sockfd, (unsigned long int *)buffer, sizeof(unsigned long int), MSG_WAITALL, (struct sockaddr *) &servaddr, &len);
         printf("Client received: %lu\n", buffer);
 	}
 
