@@ -28,7 +28,6 @@ void playAudio() {
         digitalWrite(SPEAKER_PIN, 0);
 	    delay(5);
 	}
-	delay(1000);
 }
 
 
