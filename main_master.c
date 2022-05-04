@@ -7,16 +7,47 @@
 #include <arpa/inet.h>
 #include <netinet/in.h>
 #include <sys/time.h>
+#include <wiringPi.h>
 
 #include "settings.h"
 
+#define SPEAKER_PIN 7
+
+struct Client {
+    char ID;
+    char connected;
+    char ack;
+    long round_time;
+    int  time_diff;
+};
+
+void playAudio() {
+	for(int i = 0; i < 5; i++) {
+        digitalWrite(SPEAKER_PIN, 1);
+        delay(5);
+        digitalWrite(SPEAKER_PIN, 0);
+	    delay(5);
+	}
+	delay(1000);
+}
+
 
 int main() {
+
+    struct Client c1 = {0x01, 0x00, 0x00, 0x00, 0x00};
+    struct Client c2 = {0x02, 0x00, 0x00, 0x00, 0x00};
+    struct Client c3 = {0x03, 0x00, 0x00, 0x00, 0x00};
+
+    // Init GPIO
+    if(wiringPiSetup() == -1) {
+        return 1;
+    }
+    pinMode(SPEAKER_PIN, OUTPUT);
+
     int sockfd;
-    char buffer[BUFF_SIZE];
-    char msg[BUFF_SIZE] = {'s'};
+    char buffer[REC_BUFF_SIZE];
+    char msg[SEND_BUFF_SIZE] = {0x00};
     struct sockaddr_in servaddr, cliaddr;
-    char client_list[3][2] = { {0x15, 0x00}, {0x25, 0x00}, {0x35, 0x00} };
     
     // Creating socket file descriptor
     if ( (sockfd = socket(AF_INET, SOCK_DGRAM, 0)) < 0 ) {
@@ -33,35 +64,35 @@ int main() {
     servaddr.sin_port = htons(PORT);
     
     // Bind the socket with the server address
-    if ( bind(sockfd, (const struct sockaddr *)&servaddr,
-            sizeof(servaddr)) < 0 )
-    {
+    if ( bind(sockfd, (const struct sockaddr *)&servaddr, sizeof(servaddr)) < 0 ) {
         perror("bind failed");
         exit(EXIT_FAILURE);
     }
     
-    socklen_t len = sizeof(cliaddr); //len is value/resuslt
+    socklen_t len = sizeof(cliaddr);
     int n = 0;
 
     #if !DEBUG
 
         // Wait for all 3 clients to connect & say hello
-        int client_cnt = 0;
-        while(client_list[0][1] == 0x00)// || client_list[1][1] == 0x00 || client_list[2][1] == 0x00)
+        while(c1.connected == 0x00)// || client_list[1][1] == 0x00 || client_list[2][1] == 0x00) // TODO: uncomment
         {
-            n = recvfrom(sockfd, (char *)buffer, BUFF_SIZE, MSG_WAITALL, ( struct sockaddr *) &cliaddr, &len);
+            n = recvfrom(sockfd, (char *)buffer, REC_BUFF_SIZE, MSG_WAITALL, ( struct sockaddr *) &cliaddr, &len);
 
             printf("Server received: ");
-            for (int i = 0; i < BUFF_SIZE; i++) {
+            for (int i = 0; i < REC_BUFF_SIZE; i++) {
                 printf("%x ", buffer[i]);
             }
             printf("\n");
 
-            for (int i = 0; i < 3; i++) {
-                if(buffer[0] == client_list[i][0]) {
-                    client_list[i][1] = 0x01;
-                    printf("Client %x connected\n", client_list[i][1]);
-                }
+            if (buffer[0] == (c1.ID << 4 | 0x01)) {
+                c1.connected = 0x01;
+            }
+            else if (buffer[0] == (c2.ID << 4 | 0x01)) {
+                c2.connected = 0x01;
+            }
+            else if (buffer[0] == (c3.ID << 4 | 0x01)) {
+                c3.connected = 0x01;
             }
         }
 
@@ -69,37 +100,46 @@ int main() {
 
     #endif
 
-    // Generate timestamp
-    struct timeval ts;
-    gettimeofday(&ts, NULL);
-    long unsigned int timestamp = ts.tv_sec * 1E6 + ts.tv_usec; //Sicher das es nicht /1E6 sein sollte?
-    printf("took %lu us\n", timestamp); 
+    struct timeval t1, t2;
 
-    // Broadcast timestamp
-    sendto(sockfd, &timestamp, sizeof(timestamp), MSG_CONFIRM, (const struct sockaddr *) &cliaddr, len);
-    printf("Timestamp sent...");
+    // Start measurement routine
+    while(1){
 
-    // Wait X seconds (Wait time to receive ack)
-    int acksReceived = 0;
-    while (acksReceived<1){ //change to 3!!!!!!
-        printf("Wait for ACKs\n");
-        n = recvfrom(sockfd, (char *)buffer, BUFF_SIZE, MSG_WAITALL, ( struct sockaddr *) &cliaddr, &len);
-        //ToDo: Check ACK Message, check Client ID
-        acksReceived++;
-        printf("ACK's received %d\n", acksReceived);
+        // Start roundtrip measurement       
+        msg[0] = 0x01;
+        while (c1.ack == 0x00) //|| c2.ack == 0x00 || c3.ack == 0x00) //TODO: uncomment
+        {
+            gettimeofday(&t1, NULL);
+            sendto(sockfd, (const char *)msg, SEND_BUFF_SIZE, MSG_CONFIRM, (const struct sockaddr *) &cliaddr, len);
+            n = recvfrom(sockfd, (char *)buffer, REC_BUFF_SIZE, MSG_WAITALL, ( struct sockaddr *) &cliaddr, &len);
+            gettimeofday(&t2, NULL);
+            if (buffer[0] == c1.ID) {
+                c1.round_time = (t2.tv_sec * 1E6 + t2.tv_usec) - (t1.tv_sec * 1E6 + t1.tv_usec);
+                c1.ack = 0x01;
+            }
+            else if (buffer[0] == c2.ID) {
+                c2.round_time = (t2.tv_sec * 1E6 + t2.tv_usec) - (t1.tv_sec * 1E6 + t1.tv_usec);
+                c2.ack = 0x01;
+            }
+            else if (buffer[0] == c3.ID) {
+                c3.round_time = (t2.tv_sec * 1E6 + t2.tv_usec) - (t1.tv_sec * 1E6 + t1.tv_usec);
+                c3.ack = 0x01;
+            }
+        }
+
+        // Broadcast signal to start measurement
+        msg[0] = 0x02;
+        sendto(sockfd, (const char *)msg, SEND_BUFF_SIZE, MSG_CONFIRM, (const struct sockaddr *) &cliaddr, len);
+
+        // Wait X seconds
+        sleep(2); */
+
+        // Play audio
+        playAudio();
+
+        // If received -> Calc results; if not -> Display error
+        //float speedOfSound = 343.2; // 343.2 m/s
     }
-
-    // Broadcast "start measurement" to all online clients [Ich check 0h002 0h00 nicht...]
-    sendto(sockfd, (const char *)msg, sizeof(timestamp), MSG_CONFIRM, (const struct sockaddr *) &cliaddr, len);
-    printf("StartMeasurement sent...");
-
-    // Play audio
-
-    // Wait X seconds
-    //spleep??
-
-
-    // If received -> Calc results; if not -> Display error
     
     return 0;
 }
