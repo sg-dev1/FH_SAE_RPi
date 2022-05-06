@@ -11,7 +11,7 @@
 
 #include "settings.h"
 
-//#define CPP_CLIENT
+#define CPP_CLIENT
 
 #define SPEAKER_PIN 7
 
