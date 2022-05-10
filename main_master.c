@@ -124,6 +124,8 @@ int main() {
                 c3.round_time = (t2.tv_sec * 1E6 + t2.tv_usec) - (t1.tv_sec * 1E6 + t1.tv_usec);
                 c3.ack = 0x01;
             }
+
+            // Add delay to avoid receiving old messages from other clients in next loop- cycle??
         }
 
         // Broadcast signal to start measurement
