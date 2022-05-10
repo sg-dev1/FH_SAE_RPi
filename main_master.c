@@ -131,13 +131,19 @@ int main() {
         sendto(sockfd, (const char *)msg, SEND_BUFF_SIZE, MSG_CONFIRM, (const struct sockaddr *) &cliaddr, len);
 
         // Wait X seconds
-        sleep(2); */
+        sleep(2);
 
         // Play audio
         playAudio();
 
         // If received -> Calc results; if not -> Display error
         //float speedOfSound = 343.2; // 343.2 m/s
+        while(c1.time_diff != 0) { // || c2.time_diff != 0 || c3.time_diff != 0
+            n = recvfrom(sockfd, (char *)buffer, REC_BUFF_SIZE, MSG_WAITALL, ( struct sockaddr *) &cliaddr, &len);
+            printf("time difference of client %d is %d\n", c1.ID, c1.time_diff);
+        }
+
+        c1.time_diff = 0;
     }
     
     return 0;
