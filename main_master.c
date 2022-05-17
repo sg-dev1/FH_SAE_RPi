@@ -8,6 +8,7 @@
 #include <netinet/in.h>
 #include <sys/time.h>
 #include <wiringPi.h>
+#include <stdint.h>
 
 #include "settings.h"
 
@@ -18,7 +19,7 @@ struct Client {
     char connected;
     char ack;
     long round_time;
-    int  time_diff;
+    uint32_t time_diff;
 };
 
 void playAudio() {
@@ -112,21 +113,24 @@ int main() {
             sendto(sockfd, (const char *)msg, SEND_BUFF_SIZE, MSG_CONFIRM, (const struct sockaddr *) &cliaddr, len);
             n = recvfrom(sockfd, (char *)buffer, REC_BUFF_SIZE, MSG_WAITALL, ( struct sockaddr *) &cliaddr, &len);
             gettimeofday(&t2, NULL);
-            if (buffer[0] == c1.ID) {
+            printf("test %s\n", buffer);
+            if (buffer[0] == c1.ID << 4 | 0x02) {
                 c1.round_time = (t2.tv_sec * 1E6 + t2.tv_usec) - (t1.tv_sec * 1E6 + t1.tv_usec);
                 c1.ack = 0x01;
             }
-            else if (buffer[0] == c2.ID) {
+            else if (buffer[0] == c2.ID << 4 | 0x02) {
                 c2.round_time = (t2.tv_sec * 1E6 + t2.tv_usec) - (t1.tv_sec * 1E6 + t1.tv_usec);
                 c2.ack = 0x01;
             }
-            else if (buffer[0] == c3.ID) {
+            else if (buffer[0] == c3.ID << 4 | 0x02) {
                 c3.round_time = (t2.tv_sec * 1E6 + t2.tv_usec) - (t1.tv_sec * 1E6 + t1.tv_usec);
                 c3.ack = 0x01;
             }
 
             // Add delay to avoid receiving old messages from other clients in next loop- cycle??
         }
+
+        printf("acks received\n");
 
         // Broadcast signal to start measurement
         msg[0] = 0x02;
@@ -140,9 +144,12 @@ int main() {
 
         // If received -> Calc results; if not -> Display error
         //float speedOfSound = 343.2; // 343.2 m/s
-        while(c1.time_diff != 0) { // || c2.time_diff != 0 || c3.time_diff != 0
+        while(1) {//(c1.time_diff != 0) { // || c2.time_diff != 0 || c3.time_diff != 0
             n = recvfrom(sockfd, (char *)buffer, REC_BUFF_SIZE, MSG_WAITALL, ( struct sockaddr *) &cliaddr, &len);
-            printf("time difference of client %d is %d\n", c1.ID, c1.time_diff);
+            for (int i = 0; i < REC_BUFF_SIZE; i++) {
+                printf("%d: %02x\n", i, buffer[i]);
+            }
+            printf("time difference of client %d is %s\n", c1.ID, buffer);
         }
 
         c1.time_diff = 0;
