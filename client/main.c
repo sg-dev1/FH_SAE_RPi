@@ -6,8 +6,27 @@
 #include "../sharedFunctions.h"
 #include "clientFunctions.h"
 
+#include <wiringPi.h>
+
+#define SPEAKER_PIN 7
+
+void playAudio() {
+	for(int i = 0; i < 5; i++) {
+        digitalWrite(SPEAKER_PIN, 1);
+        delay(5);
+        digitalWrite(SPEAKER_PIN, 0);
+	    delay(5);
+	}
+}
+
 
 int main(int argc, char *argv[]) {
+
+    // Init GPIO
+    if(wiringPiSetup() == -1) {
+        return 1;
+    }
+    pinMode(SPEAKER_PIN, OUTPUT);
 
     pthread_t thread_id_1;
     pthread_t thread_id_2;
@@ -35,6 +54,9 @@ int main(int argc, char *argv[]) {
 
         printf("NEW MEASUREMENT ***************************************************************************\n");
         printf("Current time: %llu\n", timeStamp);
+
+        playAudio();
+
         pthread_create(&thread_id_1, NULL, connectToPi, (void *) &tdata_pi_1);
         pthread_create(&thread_id_2, NULL, connectToPi, (void *) &tdata_pi_2);
         //TODO add PI 3
