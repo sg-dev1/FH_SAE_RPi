@@ -10,6 +10,8 @@
 #include "../errorCode.h"
 #include "../sharedFunctions.h"
 
+#include "time_measurement.h"
+
 #define MAX_BUFFER_LENGTH 50
 //TODO refactor
 
@@ -22,13 +24,17 @@ int main() {
     unsigned int fromAddressLength = sizeof(struct sockaddr_in);;
     struct sockaddr_in serverSocket;
     struct sockaddr_in from;
+    TimeMeasurement meas;
 
     char bufferReceive[MAX_BUFFER_LENGTH];
     char bufferSend[MAX_BUFFER_LENGTH];
 
+#ifdef MOCKUP
     unsigned long long timeStampStart = 0;
     unsigned long long timeStampEnd = 0;
-
+#endif // MOCKUP
+    
+    init_time_measurement(&meas);
 
     if((sockFd = socket(AF_INET, SOCK_DGRAM, 0)) < 0) {
         printError(SOCKET_ERROR);
@@ -53,6 +59,7 @@ int main() {
         sendReceiveSuccess = recvfrom(sockFd, bufferReceive, MAX_BUFFER_LENGTH, 0, (struct sockaddr *)&from, &fromAddressLength);
         if (sendReceiveSuccess > 0) {
             printf("Received a datagram\n");
+#ifdef MOCKUP
             timeStampStart = current_timestamp();
 
             //TODO implement sensor, delete mockup, if servers mic is malfunction serverSocket should send 0 or nothing at all
@@ -63,6 +70,10 @@ int main() {
 
             timeStampEnd = current_timestamp();
             snprintf(bufferSend, MAX_BUFFER_LENGTH, "%llu\n", timeStampEnd - timeStampStart);
+#else  // MOCKUP
+            uint32_t timeDiff = measurement(&meas);
+            snprintf(bufferSend, MAX_BUFFER_LENGTH, "%llu\n", (unsigned long long) timeDiff);
+#endif // MOCKUP
 
             sendReceiveSuccess = sendto(sockFd, bufferSend, MAX_BUFFER_LENGTH, 0, (struct sockaddr *) &from, fromAddressLength);
             if (sendReceiveSuccess < 0) {
