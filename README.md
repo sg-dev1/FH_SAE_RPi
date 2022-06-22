@@ -4,10 +4,6 @@
 3. If timestamps are > 0, the client calculates the position
    1. if a server sends 0 or nothing measurement failed 
 
-## TODO
-- Timestamps are just mockups. 
-- implement real measuremnts
-
 ## Files server
 - server/main.c
 - errorCode.c
